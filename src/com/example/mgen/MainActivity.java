@@ -12,15 +12,14 @@ import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
-import android.opengl.Visibility;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
 import android.view.View;
 import android.widget.ArrayAdapter;
-import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 
 
 
@@ -36,6 +35,10 @@ public class MainActivity extends Activity{
 		// TODO Auto generated method stub
 		super.onCreate(AddingNames);
 		setContentView(R.layout.activity_main);
+		 LinearLayout rlayout1 = (LinearLayout) findViewById(R.id.top);
+	       rlayout1.setVisibility(View.GONE);
+	       LinearLayout rlayout2 = (LinearLayout) findViewById(R.id.bottom);
+	       rlayout2.setVisibility(View.GONE);
 		final String [] items           = new String [] {"From Camera", "From SD Card"};
         ArrayAdapter<String> adapter  = new ArrayAdapter<String> (this, android.R.layout.select_dialog_item,items);
         AlertDialog.Builder builder     = new AlertDialog.Builder(this);
@@ -119,4 +122,5 @@ public class MainActivity extends Activity{
         return cursor.getString(column_index);
     }
 	
+    
 }
