@@ -46,6 +46,7 @@ public class MainActivity extends Activity implements android.view.View.OnClickL
 	 private Button reset,save;
 	 TextView tv2,tvtop,tvbottom;
 	 EditText top,bottom;
+	 Bitmap bitmap;
 	 private static final int IMAGES_NUMBER=3;
 	 public void onCreate(Bundle AddingNames) {
 		super.onCreate(AddingNames);
@@ -106,6 +107,7 @@ public class MainActivity extends Activity implements android.view.View.OnClickL
 	     horizLay = (HorizontalScrollView) findViewById(R.id.hl);
 		 centre =(RelativeLayout) findViewById(R.id.centreImage);
 	     mImageView = (ImageView) findViewById(R.id.iv_pic);
+	     mImageView.setOnClickListener(this);
 	     imageview1 = (ImageView) findViewById(R.id.imageView1);
         final String [] items           = new String [] {"From Camera", "From SD Card"};
         ArrayAdapter<String> adapter  = new ArrayAdapter<String> (this, android.R.layout.select_dialog_item,items);
@@ -153,7 +155,7 @@ public class MainActivity extends Activity implements android.view.View.OnClickL
 	    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 	        if (resultCode != RESULT_OK) return;
 	 
-	        Bitmap bitmap   = null;
+	        bitmap   = null;
 	        String path     = "";
 	 
 	        if (requestCode == PICK_FROM_FILE) {
@@ -194,6 +196,15 @@ public class MainActivity extends Activity implements android.view.View.OnClickL
 			Intent newIntent=new Intent(this,MainActivity.class);
 			startActivity(newIntent);
 			finish();
+		}
+		else if(id==R.id.iv_pic)
+		{
+			horizLay.setVisibility(View.GONE);
+			top.setVisibility(View.VISIBLE);
+			bottom.setVisibility(View.VISIBLE);
+			imageview1.setImageBitmap(bitmap);
+			centre.setVisibility(View.VISIBLE);
+			tv2.setVisibility(View.GONE);
 		}
 		else
 		{
