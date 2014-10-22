@@ -6,15 +6,16 @@
     tools:context="com.example.mgen.MainActivity"
     tools:ignore="MergeRootFrame" 
     android:orientation="vertical"
-    android:weightSum="1"
-     >
+    android:weightSum="1">
+     
+    <!-- wrapper Layout including images and excluding Buttons at bottom --> 
+    
 	<LinearLayout
 	    android:layout_width="fill_parent"
 	    android:layout_height="wrap_content"
 	    android:orientation="vertical"
 	    android:weightSum="3.5"
-	    android:layout_weight=".9"
-	    >	
+	    android:layout_weight=".9">	
 		<TextView
 	        android:id="@+id/textView1"
 	        android:layout_width="wrap_content"
@@ -26,9 +27,12 @@
 	        android:layout_weight=".5"
 	        android:textSize="25dp"
 	        android:textStyle="bold"/>
+		
+		<!-- Top Edit text and instruction -->
+		
 	    <LinearLayout
 	        android:layout_width="fill_parent"
-	        android:layout_height="0dp"
+	        android:layout_height="30dp"
 	        android:orientation="horizontal"
 	        android:padding="10dp"
 	        android:layout_weight="1"
@@ -42,8 +46,7 @@
 		        android:textColor="#ffffff"
 		        android:layout_gravity="center"
 		        android:textAppearance="?android:attr/textAppearanceMedium" 
-		        android:textSize="20dp"
-		        />
+		        android:textSize="20dp"/>
 	        <EditText
 	            android:layout_width="match_parent"
 	            android:layout_height="match_parent"
@@ -54,6 +57,10 @@
 	            android:paddingLeft="5dp"
 	            android:id="@+id/ettop" />
 	    </LinearLayout>
+	    
+	    
+	    <!-- The hidden Layout which emerges on clicking an image from gallery -->
+	    
 	    <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -61,40 +68,44 @@
         android:background="#FFF" 
         android:layout_weight="1"
         android:id="@+id/centreImage">
+	      
+	      <!--  Image Priview  -->
+	        
 	      <ImageView
 	        android:layout_width="450dp"
 	        android:layout_height="450dp"
 	        android:layout_marginLeft="10dp"
 	        android:scaleType="fitXY"
 	        android:layout_centerHorizontal="true"
-	        android:background="@drawable/shapes"
-	        android:id="@+id/imageView1"
-	        />
-	        <LinearLayout
-	            android:layout_width="match_parent"
-	            android:layout_height="wrap_content"
-	            android:layout_alignTop="@+id/imageView1"
-	            android:layout_alignParentLeft="true"
-	            android:orientation="vertical"
-	            android:paddingTop="15dp" >
-	            
-	            <TextView
-	                android:layout_width="350dp"
-	                android:layout_height="wrap_content"
-	                android:gravity="center"
-	                android:shadowColor="#000"
-	                android:shadowDx="3"
-	                android:shadowDy="3"
-	                android:shadowRadius="6"
-	                android:textColor="#FFF"
-	                android:textSize="36sp"
-	                android:textStyle="bold" 
-	                android:id="@+id/tvtop"
-	                android:text="Top Text"
-	                android:layout_gravity="center_horizontal"
-	                />
-	            
+	        android:layout_centerVertical="true"
+	        android:background="@android:color/transparent"
+	        android:id="@+id/imageView1" />
+	      
+	     <!-- Top text on Image Priview -->
+	      <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignTop="@+id/imageView1"
+            android:layout_alignParentLeft="true"
+            android:orientation="vertical" >
+            <TextView
+                android:layout_width="450dp"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:shadowColor="#000"
+                android:shadowDx="3"
+                android:shadowDy="3"
+                android:shadowRadius="6"
+                android:textColor="#FFF"
+                android:textSize="36sp"
+                android:textStyle="bold" 
+                android:background="#7000"
+                android:id="@+id/tvtop"
+                android:text="Top Text"
+                android:layout_gravity="center_horizontal"/>
+            
 	        </LinearLayout>
+	        <!-- Bottom Text on Image Preview -->
 	        <LinearLayout
 	            android:layout_width="match_parent"
 	            android:layout_height="wrap_content"
@@ -104,7 +115,7 @@
 	            android:paddingTop="15dp" >
 	
 	             <TextView
-	                android:layout_width="350dp"
+	                android:layout_width="450dp"
 	                android:layout_height="wrap_content"
 	                android:gravity="center"
 	                android:shadowColor="#000"
@@ -114,11 +125,15 @@
 	                android:text="Bottom Text"
 	                android:textColor="#FFF"
 	                android:textSize="36sp"
+	                android:background="#7000"
 	                android:textStyle="bold"
 	                android:id="@+id/tvbottom"
 	                android:layout_gravity="center_horizontal" />
 	        </LinearLayout>
 	    </RelativeLayout>
+	    
+	    <!-- Image Gallery to choose -->
+	    
 	    <HorizontalScrollView
 	        android:layout_width="fill_parent"
 	        android:layout_height="wrap_content"
@@ -132,15 +147,14 @@
 	            android:layout_width="wrap_content"
 	            android:layout_height="match_parent"
 	            android:orientation="horizontal"
-	            android:id="@+id/images"
-	            >
+	            android:id="@+id/images">
 	        <ImageButton
 	            android:id="@+id/btn_choose"
 	            android:layout_width="100dp"
 	            android:layout_height="100dp"
 	            android:src="@drawable/add"
 	    		android:scaleType="fitCenter"
-	    		android:layout_margin="5dp"
+	    		android:layout_margin="5px"
 	    		android:layout_gravity="center_vertical"
 	    		android:background="@android:color/transparent"/>
 	        <ImageView 
@@ -148,14 +162,18 @@
 	            android:visibility="gone"
 	            android:layout_width="400dp"
 	            android:layout_height="350dp"
-	            android:layout_margin="5dp"
+	            android:layout_margin="5px"
 	            android:scaleType="fitXY"
 	            android:background="@drawable/shapes"/>
 	        </LinearLayout>
 	    </HorizontalScrollView>
+	    
+	    
+	    <!--  Edit text 2 -->
+	    
 		<LinearLayout
 	        android:layout_width="fill_parent"
-	        android:layout_height="0dp"
+	        android:layout_height="30dp"
 	        android:orientation="horizontal"
 	        android:padding="10dp"
 	        android:layout_weight="1"
@@ -170,10 +188,9 @@
 	            android:hint="Bottom Text"
 	            android:textSize="20dp"
 	            android:paddingLeft="5dp"
-	            android:id="@+id/etbottom"
-	            />
+	            android:id="@+id/etbottom"/>
 	    </LinearLayout>
-	 </LinearLayout>
+	</LinearLayout>
 	<LinearLayout 
 	    	android:layout_gravity="bottom"
 		    android:layout_width="fill_parent"

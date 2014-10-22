@@ -60,6 +60,7 @@ public class MainActivity extends Activity implements android.view.View.OnClickL
 			LinearLayout.LayoutParams vp = new LinearLayout.LayoutParams(300,300);
 			preImages[j].setLayoutParams(vp);
 			preImages[j].setOnClickListener(this);
+			vp.setMargins(5, 5, 5, 5);
 			preImages[j].setScaleType(ImageView.ScaleType.FIT_XY);
 			preImages[j].setBackgroundResource(R.drawable.shapes);
 			preImages[j].setImageResource(R.drawable.samp);
@@ -86,9 +87,6 @@ public class MainActivity extends Activity implements android.view.View.OnClickL
 			  @Override
 			  public void onTextChanged(CharSequence s, int a, int b, int c) {
 			    tvtop.setText(s);
-			    if(a == 9){
-			      Toast.makeText(getApplicationContext(), "Maximum Limit Reached", Toast.LENGTH_SHORT).show();
-			    }
 			  }});
 		 bottom.addTextChangedListener(new TextWatcher(){
 			  @Override
@@ -99,9 +97,6 @@ public class MainActivity extends Activity implements android.view.View.OnClickL
 			  @Override
 			  public void onTextChanged(CharSequence s, int a, int b, int c) {
 			    tvbottom.setText(s);
-			    if(a == 9){
-			      Toast.makeText(getApplicationContext(), "Maximum Limit Reached", Toast.LENGTH_SHORT).show();
-			    }
 			  }});
 		 
 	     horizLay = (HorizontalScrollView) findViewById(R.id.hl);
