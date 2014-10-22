@@ -3,14 +3,24 @@ package com.example.mgen;
 
 
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
+import android.graphics.Paint.Align;
+import android.graphics.Rect;
+import android.graphics.Typeface;
+import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
@@ -144,10 +154,9 @@ public class MainActivity extends Activity implements android.view.View.OnClickL
             }
         });
 	 }
-	  
-	   
-    @Override
-	    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+     //bring Image From SD_Card
+	 @Override
+     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 	        if (resultCode != RESULT_OK) return;
 	 
 	        bitmap   = null;
@@ -169,7 +178,8 @@ public class MainActivity extends Activity implements android.view.View.OnClickL
 	        mImageView.setVisibility(View.VISIBLE);
 	        mImageView.setImageBitmap(bitmap);
 	    }
-	    public String getRealPathFromURI(Uri contentUri) {
+	 //for Camera Image Purposes TODO:errors
+     public String getRealPathFromURI(Uri contentUri) {
 	        String [] proj      = {MediaStore.Images.Media.DATA};
 	        Cursor cursor       = managedQuery( contentUri, proj, null, null,null);
 	 
@@ -181,45 +191,123 @@ public class MainActivity extends Activity implements android.view.View.OnClickL
 	 
 	        return cursor.getString(column_index);
 	    }
-
-	@Override
-	public void onClick(View arg0) {
-		// TODO Auto-generated method stub
-		int id = arg0.getId();
-		if(id==R.id.reset)
-		{
-			Intent newIntent=new Intent(this,MainActivity.class);
-			startActivity(newIntent);
-			finish();
+			@Override
+	 public void onClick(View arg0) {
+			// TODO Auto-generated method stub
+			int id = arg0.getId();
+			if(id==R.id.reset)
+			{
+				Intent newIntent=new Intent(this,MainActivity.class);
+				startActivity(newIntent);
+				finish();
+			}
+			else if(id==R.id.save)
+			{
+				if(top.getText().length()==0 || bottom.getText().length()==0)
+				{
+					Log.d("Value of ET's",top.getText()+" "+bottom.getText());
+					Toast.makeText(this, "First fill the text bottom and Up", Toast.LENGTH_LONG).show();
+				}
+				else 
+				{	
+					BitmapDrawable bmp=writeTextOnDrawable(R.drawable.samp, top.getText()+"",bottom.getText()+"");
+					Bitmap bm=((BitmapDrawable)bmp).getBitmap();
+					FileOutputStream out = null;
+					File newFolder = new File(Environment.getExternalStorageDirectory(), "Memes");
+				    if (!newFolder.exists()) {
+				        newFolder.mkdir();
+				    }
+					try {
+						File file = new File(newFolder, "mgen"+Long.toString(Double.doubleToLongBits(Math.random()))+".jpg");
+					    out = new FileOutputStream(file);
+					    bm.compress(Bitmap.CompressFormat.PNG, 90, out);
+					    save.setVisibility(View.INVISIBLE);
+					    Toast.makeText(this, "Successfully Saved", Toast.LENGTH_LONG).show();
+					    Intent newIntent=new Intent(this,MainActivity.class);
+						startActivity(newIntent);
+						finish();
+					    
+					} catch (Exception e) {
+					    e.printStackTrace();
+					} finally {
+					    try {
+					        if (out != null) {
+					            out.close();
+					        }
+					    } catch (IOException e) {
+					        e.printStackTrace();
+					    }
+					}
+				}
+			}
+			else if(id==R.id.iv_pic)
+			{
+				horizLay.setVisibility(View.GONE);
+				top.setVisibility(View.VISIBLE);
+				bottom.setVisibility(View.VISIBLE);
+				imageview1.setImageBitmap(bitmap);
+				centre.setVisibility(View.VISIBLE);
+				tv2.setVisibility(View.GONE);
+			}
+			else
+			{
+				horizLay.setVisibility(View.GONE);
+				top.setVisibility(View.VISIBLE);
+				bottom.setVisibility(View.VISIBLE);
+				imageview1.setBackgroundResource(R.drawable.samp);
+				centre.setVisibility(View.VISIBLE);
+				tv2.setVisibility(View.GONE);
+			}
 		}
-		else if(id==R.id.iv_pic)
-		{
-			horizLay.setVisibility(View.GONE);
-			top.setVisibility(View.VISIBLE);
-			bottom.setVisibility(View.VISIBLE);
-			imageview1.setImageBitmap(bitmap);
-			centre.setVisibility(View.VISIBLE);
-			tv2.setVisibility(View.GONE);
+	 private BitmapDrawable writeTextOnDrawable(int drawableId, String text, String text2) {
+		
+		    Bitmap bm = BitmapFactory.decodeResource(getResources(), drawableId)
+		            .copy(Bitmap.Config.ARGB_8888, true);
+		
+		    Typeface tf = Typeface.create("Helvetica", Typeface.BOLD);
+		
+		    Paint paint = new Paint();
+		    paint.setStyle(Paint.Style.FILL);
+		    paint.setColor(Color.WHITE);
+		    paint.setTypeface(tf);
+		    paint.setTextAlign(Align.CENTER);
+		    paint.setTextSize(convertToPixels(MainActivity.this, 11));
+		
+		    Rect textRect = new Rect();
+		    paint.getTextBounds(text, 0, text.length(), textRect);
+		
+		    Canvas canvas = new Canvas(bm);
+		
+		    //If the text is bigger than the canvas , reduce the font size
+		    if(textRect.width() >= (canvas.getWidth() - 4))     //the padding on either sides is considered as 4, so as to appropriately fit in the text
+		        paint.setTextSize(convertToPixels(MainActivity.this, 7));        //Scaling needs to be used for different dpi's
+		
+		    //Calculate the positions
+		    int xPos = (canvas.getWidth() / 2) - 2;     //-2 is for regulating the x position offset
+		
+		    //"- ((paint.descent() + paint.ascent()) / 2)" is the distance from the baseline to the center.
+		    int yPos = (int) ((canvas.getHeight() / 2) - ((paint.descent() + paint.ascent()) / 2)) ;  
+		
+		    canvas.drawText(text, xPos, yPos, paint);
+		
+		    return new BitmapDrawable(getResources(), bm);
 		}
-		else
+	 public static int convertToPixels(Context context, int nDP)
 		{
-			horizLay.setVisibility(View.GONE);
-			top.setVisibility(View.VISIBLE);
-			bottom.setVisibility(View.VISIBLE);
-			imageview1.setBackgroundResource(R.drawable.samp);
-			centre.setVisibility(View.VISIBLE);
-			tv2.setVisibility(View.GONE);
+		    final float conversionScale = context.getResources().getDisplayMetrics().density;
+		
+		    return (int) ((nDP * conversionScale) + 0.5f) ;
+		
 		}
-	}
-	@Override
-	public void onBackPressed() {
+		@Override
+	 public void onBackPressed() {
 	    if (doubleBackToExitPressedOnce) {
 	        super.onBackPressed();
 	        return;
 	    }
 
 	    this.doubleBackToExitPressedOnce = true;
-	    Toast.makeText(this, "Please click BACK again to exit", Toast.LENGTH_SHORT).show();
+	    Toast.makeText(this, "Please click BACK again to exit", Toast.LENGTH_LONG).show();
 	    new Handler().postDelayed(new Runnable() {
 
 	        @Override
