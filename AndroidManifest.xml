@@ -24,6 +24,8 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity android:name=".CaptureSignature" android:label="Signature Confirmation"
+            android:theme="@style/AppTheme" />
     </application>
 <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
 </manifest>

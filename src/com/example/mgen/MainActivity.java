@@ -3,11 +3,14 @@ package com.example.mgen;
 
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -29,7 +32,9 @@ import android.provider.MediaStore;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.View;
+import android.view.View.OnClickListener;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
@@ -41,8 +46,10 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-
-
+//TODO: write to Internal MEmory and check if SD_Card present?-urgent
+//TODO: write text to correct place-easy
+//TODO: insert many preImages in array-easy
+//TODO: Correct image not being written-urgent semi
 public class MainActivity extends Activity implements android.view.View.OnClickListener{
 	
 	 private Uri mImageCaptureUri;
@@ -50,13 +57,15 @@ public class MainActivity extends Activity implements android.view.View.OnClickL
 	 private RelativeLayout centre;
 	 private HorizontalScrollView horizLay;
 	 private LinearLayout inHorizontalScrollView;
-	 private static final int PICK_FROM_CAMERA = 1;
-	 private static final int PICK_FROM_FILE = 2;
 	 private boolean doubleBackToExitPressedOnce = false;
 	 private Button reset,save;
-	 TextView tv2,tvtop,tvbottom;
+	 ImageButton paint;
+	 TextView tv2,tv3,tvtop,tvbottom;
 	 EditText top,bottom;
 	 Bitmap bitmap;
+	 ProgressDialog progressDialog;
+	 private static final int PICK_FROM_CAMERA = 1;
+	 private static final int PICK_FROM_FILE = 2;
 	 private static final int IMAGES_NUMBER=3;
 	 public void onCreate(Bundle AddingNames) {
 		super.onCreate(AddingNames);
@@ -81,13 +90,28 @@ public class MainActivity extends Activity implements android.view.View.OnClickL
 		 bottom = (EditText) findViewById(R.id.etbottom);
 		 tvtop = (TextView) findViewById(R.id.tvtop);
          tvbottom = (TextView) findViewById(R.id.tvbottom);
-	     top.setVisibility(View.GONE);
-	     bottom.setVisibility(View.GONE);
-		 reset = (Button) findViewById(R.id.reset);
+         reset = (Button) findViewById(R.id.reset);
+		 paint = (ImageButton) findViewById(R.id.paint);
          save = (Button) findViewById(R.id.save);
          tv2 = (TextView) findViewById(R.id.textView2);
+         tv3 = (TextView) findViewById(R.id.textView3);
+         horizLay = (HorizontalScrollView) findViewById(R.id.hl);
+		 centre =(RelativeLayout) findViewById(R.id.centreImage);
+	     mImageView = (ImageView) findViewById(R.id.iv_pic);
+	     imageview1 = (ImageView) findViewById(R.id.imageView1);
+	     progressDialog=new ProgressDialog(this);   
+         top.setVisibility(View.GONE);
+	     bottom.setVisibility(View.GONE);
 		 reset.setOnClickListener(this);
+		 paint.setOnClickListener(new OnClickListener() {
+			public void onClick(View v) {
+				Intent intent = new Intent(MainActivity.this, CaptureSignature.class); 
+                startActivityForResult(intent,3);	
+			}
+		});
 		 save.setOnClickListener(this); 
+		 mImageView.setOnClickListener(this);
+	     
 		 top.addTextChangedListener(new TextWatcher(){
 			  @Override
 			  public void afterTextChanged(Editable arg0) {}
@@ -109,12 +133,7 @@ public class MainActivity extends Activity implements android.view.View.OnClickL
 			    tvbottom.setText(s);
 			  }});
 		 
-	     horizLay = (HorizontalScrollView) findViewById(R.id.hl);
-		 centre =(RelativeLayout) findViewById(R.id.centreImage);
-	     mImageView = (ImageView) findViewById(R.id.iv_pic);
-	     mImageView.setOnClickListener(this);
-	     imageview1 = (ImageView) findViewById(R.id.imageView1);
-        final String [] items           = new String [] {"From Camera", "From SD Card"};
+		 final String [] items           = new String [] {"From Camera","From Gallery"};
         ArrayAdapter<String> adapter  = new ArrayAdapter<String> (this, android.R.layout.select_dialog_item,items);
         AlertDialog.Builder builder     = new AlertDialog.Builder(this);
         builder.setTitle("Select Image");
@@ -138,10 +157,8 @@ public class MainActivity extends Activity implements android.view.View.OnClickL
                     dialog.cancel();
                 } else {
                     Intent intent = new Intent();
- 
                     intent.setType("image/*");
                     intent.setAction(Intent.ACTION_GET_CONTENT);
- 
                     startActivityForResult(Intent.createChooser(intent, "Complete action using"), PICK_FROM_FILE);
                 }
             }
@@ -154,31 +171,79 @@ public class MainActivity extends Activity implements android.view.View.OnClickL
             }
         });
 	 }
-     //bring Image From SD_Card
+	 
 	 @Override
      protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-	        if (resultCode != RESULT_OK) return;
+		 super.onActivityResult(requestCode, resultCode, data);
+		 switch(requestCode) { 
+		    case PICK_FROM_FILE:
+		        if(resultCode == RESULT_OK){  
+					mImageCaptureUri=data.getData();
+					bitmap   = null;
+					String path     = "";
+					path = getRealPathFromURI(mImageCaptureUri); //from Gallery
+					if (path == null)
+					    path = mImageCaptureUri.getPath(); //from File Manager
+					if (path != null)
+					    bitmap  = BitmapFactory.decodeFile(path);
+					else {
+					   path    = mImageCaptureUri.getPath(); //from URI
+					   try {
+						bitmap  = decodeUri(mImageCaptureUri);
+					} catch (FileNotFoundException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+					 }
+					mImageView.setVisibility(View.VISIBLE);
+					mImageView.setImageBitmap(bitmap); //from bitmap
+					
+		        }
+		        break;
+		    case IMAGES_NUMBER:
+		    	if (resultCode == RESULT_OK) {
+					 Bundle bundle = data.getExtras();
+					 String status  = bundle.getString("status");
+					 if(status.equalsIgnoreCase("done")){
+						 Toast toast = Toast.makeText(this, "Signature capture successful!", Toast.LENGTH_SHORT);
+					     toast.setGravity(Gravity.CENTER, 105, 50);
+					     toast.show();
+					 }
+		    	}
+		    	break;
+		 	}
+	 }
 	 
-	        bitmap   = null;
-	        String path     = "";
-	 
-	        if (requestCode == PICK_FROM_FILE) {
-	            mImageCaptureUri = data.getData();
-	            path = getRealPathFromURI(mImageCaptureUri); //from Gallery
-	 
-	            if (path == null)
-	                path = mImageCaptureUri.getPath(); //from File Manager
-	 
-	            if (path != null)
-	                bitmap  = BitmapFactory.decodeFile(path);
-	        } else {
-	            path    = mImageCaptureUri.getPath();
-	            bitmap  = BitmapFactory.decodeFile(path);
+	 private Bitmap decodeUri(Uri selectedImage) throws FileNotFoundException {
+
+	        // Decode image size
+	        BitmapFactory.Options o = new BitmapFactory.Options();
+	        o.inJustDecodeBounds = true;
+	        BitmapFactory.decodeStream(getContentResolver().openInputStream(selectedImage), null, o);
+
+	        // The new size we want to scale to
+	        final int REQUIRED_SIZE = 140;
+
+	        // Find the correct scale value. It should be the power of 2.
+	        int width_tmp = o.outWidth, height_tmp = o.outHeight;
+	        int scale = 1;
+	        while (true) {
+	            if (width_tmp / 2 < REQUIRED_SIZE
+	               || height_tmp / 2 < REQUIRED_SIZE) {
+	                break;
+	            }
+	            width_tmp /= 2;
+	            height_tmp /= 2;
+	            scale *= 2;
 	        }
-	        mImageView.setVisibility(View.VISIBLE);
-	        mImageView.setImageBitmap(bitmap);
+
+	        // Decode with inSampleSize
+	        BitmapFactory.Options o2 = new BitmapFactory.Options();
+	        o2.inSampleSize = scale;
+	        return BitmapFactory.decodeStream(getContentResolver().openInputStream(selectedImage), null, o2);
+
 	    }
-	 //for Camera Image Purposes TODO:errors
+	 
      public String getRealPathFromURI(Uri contentUri) {
 	        String [] proj      = {MediaStore.Images.Media.DATA};
 	        Cursor cursor       = managedQuery( contentUri, proj, null, null,null);
@@ -191,9 +256,9 @@ public class MainActivity extends Activity implements android.view.View.OnClickL
 	 
 	        return cursor.getString(column_index);
 	    }
-			@Override
+	
+     @Override
 	 public void onClick(View arg0) {
-			// TODO Auto-generated method stub
 			int id = arg0.getId();
 			if(id==R.id.reset)
 			{
@@ -203,13 +268,16 @@ public class MainActivity extends Activity implements android.view.View.OnClickL
 			}
 			else if(id==R.id.save)
 			{
+				
 				if(top.getText().length()==0 || bottom.getText().length()==0)
 				{
 					Log.d("Value of ET's",top.getText()+" "+bottom.getText());
-					Toast.makeText(this, "First fill the text bottom and Up", Toast.LENGTH_LONG).show();
+					Toast toaster=Toast.makeText(this, "First fill the text bottom and Up", Toast.LENGTH_LONG);
+					toaster.setGravity(Gravity.CENTER_VERTICAL, 105, 50);
+					toaster.show();
 				}
 				else 
-				{	
+				{	open();
 					BitmapDrawable bmp=writeTextOnDrawable(R.drawable.samp, top.getText()+"",bottom.getText()+"");
 					Bitmap bm=((BitmapDrawable)bmp).getBitmap();
 					FileOutputStream out = null;
@@ -222,7 +290,11 @@ public class MainActivity extends Activity implements android.view.View.OnClickL
 					    out = new FileOutputStream(file);
 					    bm.compress(Bitmap.CompressFormat.PNG, 90, out);
 					    save.setVisibility(View.INVISIBLE);
-					    Toast.makeText(this, "Successfully Saved", Toast.LENGTH_LONG).show();
+					    Toast toaster=Toast.makeText(this, "Successfully Saved", Toast.LENGTH_LONG);
+						toaster.setGravity(Gravity.CENTER_VERTICAL, 105, 50);
+						toaster.show();
+					    if(progressDialog!=null)
+					    	progressDialog.dismiss();
 					    Intent newIntent=new Intent(this,MainActivity.class);
 						startActivity(newIntent);
 						finish();
@@ -248,6 +320,9 @@ public class MainActivity extends Activity implements android.view.View.OnClickL
 				imageview1.setImageBitmap(bitmap);
 				centre.setVisibility(View.VISIBLE);
 				tv2.setVisibility(View.GONE);
+				tv3.setVisibility(View.GONE);
+				reset.setVisibility(View.VISIBLE);
+				save.setVisibility(View.VISIBLE);
 			}
 			else
 			{
@@ -257,9 +332,30 @@ public class MainActivity extends Activity implements android.view.View.OnClickL
 				imageview1.setBackgroundResource(R.drawable.samp);
 				centre.setVisibility(View.VISIBLE);
 				tv2.setVisibility(View.GONE);
+				tv3.setVisibility(View.GONE);
+				reset.setVisibility(View.VISIBLE);
+				save.setVisibility(View.VISIBLE);
 			}
 		}
-	 private BitmapDrawable writeTextOnDrawable(int drawableId, String text, String text2) {
+	 
+     public boolean isExternalStorageWritable() {
+    	    String state = Environment.getExternalStorageState();
+    	    if (Environment.MEDIA_MOUNTED.equals(state)) {
+    	        return true;
+    	    }
+    	    return false;
+    	}
+	
+     public boolean isExternalStorageReadable() {
+    	    String state = Environment.getExternalStorageState();
+    	    if (Environment.MEDIA_MOUNTED.equals(state) ||
+    	        Environment.MEDIA_MOUNTED_READ_ONLY.equals(state)) {
+    	        return true;
+    	    }
+    	    return false;
+    	}
+     
+     private BitmapDrawable writeTextOnDrawable(int drawableId, String text, String text2) {
 		
 		    Bitmap bm = BitmapFactory.decodeResource(getResources(), drawableId)
 		            .copy(Bitmap.Config.ARGB_8888, true);
@@ -271,35 +367,71 @@ public class MainActivity extends Activity implements android.view.View.OnClickL
 		    paint.setColor(Color.WHITE);
 		    paint.setTypeface(tf);
 		    paint.setTextAlign(Align.CENTER);
-		    paint.setTextSize(convertToPixels(MainActivity.this, 11));
+		    paint.setTextSize(convertToPixels(MainActivity.this, 120));
 		
 		    Rect textRect = new Rect();
 		    paint.getTextBounds(text, 0, text.length(), textRect);
-		
+		    paint.getTextBounds(text2, 0, text2.length(), textRect);
 		    Canvas canvas = new Canvas(bm);
+/*		
+		    if(textRect.width() >= (canvas.getWidth() - 4))
+		        paint.setTextSize(convertToPixels(MainActivity.this, 7));
 		
-		    //If the text is bigger than the canvas , reduce the font size
-		    if(textRect.width() >= (canvas.getWidth() - 4))     //the padding on either sides is considered as 4, so as to appropriately fit in the text
-		        paint.setTextSize(convertToPixels(MainActivity.this, 7));        //Scaling needs to be used for different dpi's
-		
-		    //Calculate the positions
-		    int xPos = (canvas.getWidth() / 2) - 2;     //-2 is for regulating the x position offset
-		
-		    //"- ((paint.descent() + paint.ascent()) / 2)" is the distance from the baseline to the center.
+		    int xPos = (canvas.getWidth() / 2) - 2;
+		    int xPos2 = (canvas.getWidth() / 2) - 2;
+
 		    int yPos = (int) ((canvas.getHeight() / 2) - ((paint.descent() + paint.ascent()) / 2)) ;  
-		
+		    int yPos2 = (int) ((canvas.getHeight() / 2) - ((paint.descent() + paint.ascent()) / 2)) ;
+		    */
+		    int xPos = canvas.getWidth()/9;
+		    int xPos2 = canvas.getWidth()/9;
+		    int yPos = (int) ((canvas.getHeight()/9));
+		    int yPos2 = (int) ((canvas.getHeight()-canvas.getHeight()/9));
 		    canvas.drawText(text, xPos, yPos, paint);
-		
+		    canvas.drawText(text2, xPos2, yPos2, paint);
 		    return new BitmapDrawable(getResources(), bm);
 		}
-	 public static int convertToPixels(Context context, int nDP)
-		{
+	 
+     public static int convertToPixels(Context context, int nDP) {
 		    final float conversionScale = context.getResources().getDisplayMetrics().density;
 		
 		    return (int) ((nDP * conversionScale) + 0.5f) ;
 		
 		}
-		@Override
+	 
+     public void open(){
+         progressDialog.setMessage("Generating your Meme and saving :) ");
+         progressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+         progressDialog.setIndeterminate(true);
+         Log.d("shown","here");
+         progressDialog.show();
+
+      final int totalProgressTime = 100;
+
+      final Thread t = new Thread(){
+
+      @Override
+      public void run(){
+    
+         int jumpTime = 0;
+         while(jumpTime < totalProgressTime){
+            try {
+               sleep(200);
+               jumpTime += 5;
+               progressDialog.setProgress(jumpTime);
+            } catch (InterruptedException e) {
+              e.printStackTrace();
+            }
+
+         }
+
+      }
+      };
+      t.start();
+
+      }
+     
+     @Override
 	 public void onBackPressed() {
 	    if (doubleBackToExitPressedOnce) {
 	        super.onBackPressed();
@@ -307,7 +439,9 @@ public class MainActivity extends Activity implements android.view.View.OnClickL
 	    }
 
 	    this.doubleBackToExitPressedOnce = true;
-	    Toast.makeText(this, "Please click BACK again to exit", Toast.LENGTH_LONG).show();
+	    Toast toast=Toast.makeText(this, "Please click BACK again to exit", Toast.LENGTH_LONG);
+        toast.setGravity(Gravity.CENTER_VERTICAL, 105, 50);
+        toast.show(); 
 	    new Handler().postDelayed(new Runnable() {
 
 	        @Override
